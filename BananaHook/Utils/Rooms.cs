@@ -63,11 +63,7 @@ namespace BananaHook.Utils
             if ((m_nTotal = Players.CountValidPlayers()) > 0 && m_nTagged == m_nTotal)
             {
                 m_bIsGameEnded = true;
-                try
-                { 
-                    Events.OnRoundEndPre?.Invoke(null, null);
-                }
-                catch (Exception e) { BananaHook.Log("OnRoundEndPre Exception: " + e.Message + "\n" + e.StackTrace); }
+				Events.OnRoundEndPre?.Invoke(null, null);
             }
         }
         internal static void CheckForTheGameEndPost()
@@ -75,11 +71,7 @@ namespace BananaHook.Utils
             if (m_bIsTagging || (m_nTagged = Players.CountInfectedPlayers()) < 4) return;
             if (m_bIsGameEnded && m_nTotal > 0 && m_nTagged == m_nTotal)
             {
-                try
-                { 
-                    Events.OnRoundEndPost?.Invoke(null, null);
-                }
-                catch (Exception e) { BananaHook.Log("OnRoundEndPost Exception: " + e.Message + "\n" + e.StackTrace); }
+				Events.OnRoundEndPost?.Invoke(null, null);
             }
         }
     }

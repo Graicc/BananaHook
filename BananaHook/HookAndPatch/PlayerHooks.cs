@@ -11,41 +11,21 @@ namespace BananaHook.HookAndPatch
         static public void OnEvent(Player tagger, Player victim)
         {
             bool isTagging = Utils.Room.IsTagging();
-            if (Events.OnPlayerTagPlayer != null)
+            Events.OnPlayerTagPlayer?.SafeInvoke(null, new PlayerTaggedPlayerArgs
             {
-                PlayerTaggedPlayerArgs args = new PlayerTaggedPlayerArgs();
-                args.tagger = tagger;
-                args.victim = victim;
-                args.isTagging = isTagging;
-                object[] obja = { null, args };
-                foreach (var del in Events.OnPlayerTagPlayer.GetInvocationList())
-                {
-                    try
-                    {
-                        del.DynamicInvoke(obja);
-                    }
-                    catch (Exception e)
-                    {
-                        BananaHook.Log("OnPlayerTagPlayer Exception: " + e.Message + "\n" + e.StackTrace + "\nTagger: " + (tagger == null ? "null" : tagger.NickName) + "\nVictim: " + (victim == null ? "null" : victim.NickName));
-                        BananaHook.Log(e.StackTrace);
-                    }
-                }
-            }
-            if (victim == PhotonNetwork.LocalPlayer && Events.OnLocalPlayerTag != null)
+                tagger = tagger,
+                victim = victim,
+                isTagging = isTagging
+            });
+
+            if (victim == PhotonNetwork.LocalPlayer)
             {
-                PlayerTaggedPlayerArgs args = new PlayerTaggedPlayerArgs();
-                args.tagger = tagger;
-                args.victim = victim;
-                args.isTagging = isTagging;
-                object[] obja = { null, args };
-                foreach (var del in Events.OnLocalPlayerTag.GetInvocationList())
+                Events.OnLocalPlayerTag?.SafeInvoke(null, new PlayerTaggedPlayerArgs
                 {
-                    try
-                    {
-                        del.DynamicInvoke(obja);
-                    }
-                    catch (Exception e) { BananaHook.Log("OnLocalPlayerTag Exception: " + e.Message + "\n" + e.StackTrace); }
-                }
+                    tagger = tagger,
+                    victim = victim,
+                    isTagging = isTagging
+                });
             }
         }
     }
@@ -56,20 +36,13 @@ namespace BananaHook.HookAndPatch
     {
         private static void Postfix(string key, string value)
         {
-            if (Events.OnLocalNicknameChange != null && key == "playerName")
+            if (key == "playerName")
             {
-                PlayerNicknameArgs args = new PlayerNicknameArgs();
-                args.oldNickName = PhotonNetwork.LocalPlayer.NickName;
-                args.newNickName = value;
-                object[] obja = { null, args };
-                foreach (var del in Events.OnLocalNicknameChange.GetInvocationList())
+                Events.OnLocalNicknameChange?.SafeInvoke(null, new PlayerNicknameArgs
                 {
-                    try
-                    {
-                        del.DynamicInvoke(obja);
-                    }
-                    catch (Exception e) { BananaHook.Log("OnLocalNicknameChange Exception: " + e.Message + "\n" + e.StackTrace); }
-                }
+                    oldNickName = PhotonNetwork.LocalPlayer.NickName,
+                    newNickName = value
+                });
             }
         }
     }
@@ -80,21 +53,11 @@ namespace BananaHook.HookAndPatch
     {
         private static void Postfix(GorillaNetworking.GorillaComputer __instance)
         {
-            if (Events.OnLocalNicknameChange != null)
+            Events.OnLocalNicknameChange?.SafeInvoke(null, new PlayerNicknameArgs
             {
-                PlayerNicknameArgs args = new PlayerNicknameArgs();
-                args.oldNickName = "gorilla";
-                args.newNickName = __instance.currentName;
-                object[] obja = { null, args };
-                foreach (var del in Events.OnLocalNicknameChange.GetInvocationList())
-                {
-                    try
-                    {
-                        del.DynamicInvoke(obja);
-                    }
-                    catch (Exception e) { BananaHook.Log("OnLocalNicknameChange Exception: " + e.Message + "\n" + e.StackTrace); }
-                }
-            }
+                oldNickName = "gorilla",
+                newNickName = __instance.currentName
+            });
         }
     }
 

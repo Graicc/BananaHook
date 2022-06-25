@@ -61,21 +61,13 @@ namespace BananaHook.Patches
                 m_bIsPrivateLobby = !currentRoom.IsVisible || currentRoom.CustomProperties.ContainsKey("Description");
                 Room.m_szRoomCode = PhotonNetwork.CurrentRoom.Name;
             }
-            if (Events.OnRoomJoined != null)
-            {
-                RoomJoinedArgs args = new RoomJoinedArgs();
-                args.isPrivate = m_bIsPrivateLobby;
-                args.roomCode = Room.m_szRoomCode;
-                object[] obja = { null, args };
-                foreach (var del in Events.OnRoomJoined.GetInvocationList())
-                {
-                    try
-                    {
-                        del.DynamicInvoke(obja);
-                    }
-                    catch (Exception e) { BananaHook.Log("OnRoomJoined Exception: " + e.Message + "\n" + e.StackTrace); }
-                }
-            }
+
+			Events.OnRoomJoined?.SafeInvoke(null, new RoomJoinedArgs
+			{
+				isPrivate = m_bIsPrivateLobby,
+				roomCode = Room.m_szRoomCode
+			});
+
             Room.CheckForTheGameEndPost();
         }
     }
@@ -89,15 +81,7 @@ namespace BananaHook.Patches
             Room.m_bIsGameEnded = false;
             Room.m_szRoomCode = null;
             if (!PhotonNetwork.InRoom) return;
-            object[] obj = { null, null };
-            foreach (var del in Events.OnRoomDisconnected.GetInvocationList())
-            {
-                try
-                {
-                    del.DynamicInvoke(obj);
-                }
-                catch (Exception e) { BananaHook.Log("OnRoomDisconnected Exception: " + e.Message + "\n" + e.StackTrace); }
-            }
+            Events.OnRoomDisconnected?.SafeInvoke(null, null);
         }
     }
 
@@ -113,36 +97,20 @@ namespace BananaHook.Patches
                 if (Room.m_eCurrentLobbyMode == eRoomQueue.Default || Room.m_eCurrentLobbyMode == eRoomQueue.Competitive)
                 {
                     bool isTaggingNow = Room.IsTagging();
-                    if (Room.m_bIsTagging != isTaggingNow && Events.OnTagOrInfectChange != null)
+                    if (Room.m_bIsTagging != isTaggingNow)
                     {
-                        IsTagOrInfectArgs args = new IsTagOrInfectArgs();
-                        args.isTagging = isTaggingNow;
-                        object[] obj = { null, args };
-                        foreach (var del in Events.OnTagOrInfectChange.GetInvocationList())
+                        Events.OnTagOrInfectChange?.SafeInvoke(null, new IsTagOrInfectArgs
                         {
-                            try
-                            {
-                                del.DynamicInvoke(obj);
-                            }
-                            catch (Exception e) { BananaHook.Log("OnTagOrInfectChange Exception: " + e.Message + "\n" + e.StackTrace); }
-                        }
+                            isTagging = isTaggingNow
+                        });
                     }
                     Room.m_bIsTagging = isTaggingNow;
                 }
-                if (Events.OnPlayerConnected != null)
-                {
-                    PlayerDisConnectedArgs args = new PlayerDisConnectedArgs();
-                    args.player = newPlayer;
-                    object[] obj = { null, args };
-                    foreach (var del in Events.OnPlayerConnected.GetInvocationList())
-                    {
-                        try
-                        {
-                            del.DynamicInvoke(obj);
-                        }
-                        catch (Exception e) { BananaHook.Log("OnPlayerConnected Exception: " + e.Message + "\n" + e.StackTrace); }
-                    }
-                }
+
+				Events.OnPlayerConnected?.SafeInvoke(null, new PlayerDisConnectedArgs
+				{
+					player = newPlayer
+				});
             }
             catch (Exception e) { BananaHook.Log("OnPlayerEnteredRoom Exception: " + e.Message + "\n" + e.StackTrace); }
         }
@@ -169,17 +137,11 @@ namespace BananaHook.Patches
                         {
                             Room.m_bIsGameEnded = false;
                             Room.m_hCurrentIt = Players.GetTargetOf(Photon.Pun.PhotonNetwork.LocalPlayer);
-                            OnRoundStartArgs args = new OnRoundStartArgs();
-                            args.player = null;
-                            object[] obj = { null, args };
-                            foreach (var del in Events.OnRoundStart.GetInvocationList())
+
+                            Events.OnRoundStart?.SafeInvoke(null, new OnRoundStartArgs
                             {
-                                try
-                                {
-                                    del.DynamicInvoke(obj);
-                                }
-                                catch (Exception e) { BananaHook.Log("OnRoundStart (PlayTagSound HUNT) Exception: " + e.Message + "\n" + e.StackTrace); }
-                            }
+                                player = null
+                            });
                         }
                         else
                         {
@@ -190,17 +152,11 @@ namespace BananaHook.Patches
                     {
                         Room.m_bIsGameEnded = false;
                         Room.m_hCurrentIt = Players.FindPlayerOfVRRig(__instance);
-                        OnRoundStartArgs args = new OnRoundStartArgs();
-                        args.player = Room.m_hCurrentIt;
-                        object[] obj = { null, args };
-                        foreach (var del in Events.OnRoundStart.GetInvocationList())
-                        {
-                            try
-                            {
-                                del.DynamicInvoke(obj);
-                            }
-                            catch (Exception e) { BananaHook.Log("OnRoundStart (PlayTagSound) Exception: " + e.Message + "\n" + e.StackTrace); }
-                        }
+
+						Events.OnRoundStart?.SafeInvoke(null, new OnRoundStartArgs
+						{
+							player = Room.m_hCurrentIt
+						});
                     }
                     break;
 
@@ -209,22 +165,8 @@ namespace BananaHook.Patches
                 case 2: // End of Infection Game, Hunt Game
                     Room.m_bIsGameEnded = true;
                     object[] obja = { null, null };
-                    foreach (var del in Events.OnRoundEndPre.GetInvocationList())
-                    {
-                        try
-                        {
-                            del.DynamicInvoke(obja);
-                        }
-                        catch (Exception e) { BananaHook.Log("OnRoundEndPre Exception: " + e.Message + "\n" + e.StackTrace); }
-                    }
-                    foreach (var del in Events.OnRoundEndPost.GetInvocationList())
-                    {
-                        try
-                        {
-                            del.DynamicInvoke(obja);
-                        }
-                        catch (Exception e) { BananaHook.Log("OnRoundEndPost Exception: " + e.Message + "\n" + e.StackTrace); }
-                    }
+                    Events.OnRoundEndPre?.SafeInvoke(null, null);
+                    Events.OnRoundEndPost?.SafeInvoke(null, null);
                     break;
 
                 //case 3: break; // Flag taken?
@@ -244,53 +186,27 @@ namespace BananaHook.Patches
     {
         private static void Prefix(Photon.Realtime.Player otherPlayer)
         {
-            if (Events.OnPlayerDisconnectedPre != null)
-            {
-                PlayerDisConnectedArgs args = new PlayerDisConnectedArgs();
-                args.player = otherPlayer;
-                object[] obja = { null, args };
-                foreach (var del in Events.OnPlayerDisconnectedPre.GetInvocationList())
-                {
-                    try
-                    {
-                        del.DynamicInvoke(obja);
-                    }
-                    catch (Exception e) { BananaHook.Log("OnPlayerDisconnectedPre Exception: " + e.Message + "\n" + e.StackTrace); }
-                }
-            }
+			Events.OnPlayerDisconnectedPre?.SafeInvoke(null, new PlayerDisConnectedArgs
+			{
+				player = otherPlayer
+			});
         }
         private static void Postfix(Photon.Realtime.Player otherPlayer)
         {
-            if (Events.OnPlayerDisconnectedPost != null)
-            {
-                PlayerDisConnectedArgs args = new PlayerDisConnectedArgs();
-                args.player = otherPlayer;
-                object[] obja = { null, args };
-                foreach (var del in Events.OnPlayerDisconnectedPost.GetInvocationList())
-                {
-                    try
-                    {
-                        del.DynamicInvoke(obja);
-                    }
-                    catch (Exception e) { BananaHook.Log("OnPlayerDisconnectedPost Exception: " + e.Message + "\n" + e.StackTrace); }
-                }
-            }
+			Events.OnPlayerDisconnectedPost?.SafeInvoke(null, new PlayerDisConnectedArgs
+			{
+				player = otherPlayer
+			});
+
             if (Room.m_eCurrentGamemode != eRoomGamemode.Casual)
             {
                 bool isTaggingNow = Room.IsTagging();
-                if (Room.m_bIsTagging != isTaggingNow && Events.OnTagOrInfectChange != null)
+                if (Room.m_bIsTagging != isTaggingNow)
                 {
-                    IsTagOrInfectArgs args = new IsTagOrInfectArgs();
-                    args.isTagging = isTaggingNow;
-                    object[] obja = { null, args };
-                    foreach (var del in Events.OnTagOrInfectChange.GetInvocationList())
-                    {
-                        try
-                        {
-                            del.DynamicInvoke(obja);
-                        }
-                        catch (Exception e) { BananaHook.Log("OnTagOrInfectChange Exception: " + e.Message + "\n" + e.StackTrace); }
-                    }
+                    Events.OnTagOrInfectChange?.SafeInvoke(null, new IsTagOrInfectArgs
+					{
+                        isTagging = isTaggingNow,
+					});
                 }
                 Room.m_bIsTagging = isTaggingNow;
             }
